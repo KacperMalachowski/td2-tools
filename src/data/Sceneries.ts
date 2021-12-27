@@ -30,7 +30,7 @@ export default [
   { name: "Krzęcz", construtionZone: 9 },
   { name: "Kszęty", construtionZone: 9 },
   { name: "Kudowa-Zdrój", construtionZone: 6 },
-  { name: "LCS GŁowno", construtionZone: 1 },
+  { name: "LCS Głowno", construtionZone: 1 },
   { name: "LCS Ozorków", construtionZone: 1 },
   { name: "LCS Żywiec", construtionZone: 4 },
   { name: "Legno", construtionZone: 9 },
