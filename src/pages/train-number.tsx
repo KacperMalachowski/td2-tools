@@ -1,6 +1,7 @@
 import React, { ChangeEvent } from "react";
 import { Helmet } from 'react-helmet';
-import { TrainData, TrainDriverAPI as TDAPI} from '../apis/TrainDriver';
+import { APIResponseNumbers, DatabaseAPI, NumbersData } from "../apis/DataBase";
+import Sceneries from "../data/Sceneries";
 
 enum Zones {
   Warszawa,
@@ -26,14 +27,15 @@ enum TrainTypes {
 
 export default class TrainNumber extends React.Component<{}, {startZone: Zones, endZone: Zones, trainType: TrainTypes, trainNumber: string, errors: string[]}> {
 
-  private activeNumbers: TrainData[] = [{ trainNo: 1303, driverName: "Kacper9"}]
+  private activeNumbers: NumbersData[] = []
+  private sceneriesData = Sceneries;
 
   constructor(props: any) {
     super(props);
 
     this.state = {
-      startZone: Zones.Warszawa,
-      endZone: Zones.Kraków,
+      startZone: 1,
+      endZone: 2,
       trainType: TrainTypes.Express,
       trainNumber: "1350",
       errors: []
@@ -41,28 +43,29 @@ export default class TrainNumber extends React.Component<{}, {startZone: Zones, 
 
     this.handleChange = this.handleChange.bind(this);
 
-    TDAPI.getTrains()
-    .then(d => {
-      this.activeNumbers = d.message;
-    });
+    DatabaseAPI.getNumbers()
+      .then((d: APIResponseNumbers) => {
+        this.activeNumbers = d.message;
+      })
 
     setInterval(() => {
-      TDAPI.getTrains()
-        .then(d => {
-          this.activeNumbers = d.message;
-        });
-    }, 180000)
+      DatabaseAPI.getNumbers()
+      .then((d: APIResponseNumbers) => {
+        this.activeNumbers = d.message
+      })
+    }, 12960000)
   }
 
   componentDidMount() {
     this.selectNumber();
   }
 
+  
   selectNumber() {
     let number = "";
 
-    number += this.state.startZone + 1;
-    number += this.state.endZone + 1;
+    number += this.getCOnstructionZoneFromIndex(this.state.startZone);
+    number += this.getCOnstructionZoneFromIndex(this.state.endZone);
 
     switch (this.state.trainType) {
       case TrainTypes.Express:
@@ -139,7 +142,7 @@ export default class TrainNumber extends React.Component<{}, {startZone: Zones, 
 
     }
 
-    if (this.activeNumbers.some(v => v.trainNo == Number.parseInt(number))) {
+    if (this.activeNumbers.some(v => v.trainNo.toString() == number)) {
       console.error(`Numer ${number} używany! Generuje następny...`);
       this.selectNumber();
     } else {
@@ -149,15 +152,15 @@ export default class TrainNumber extends React.Component<{}, {startZone: Zones, 
 
   async handleChange(event: ChangeEvent<HTMLSelectElement>) {
     if (event.target.name == "startZone") {
-      await this.setState({ startZone: Number.parseInt(event.target.value)});
+      this.setState({ startZone: Number.parseInt(event.target.value) });
     }
 
     if (event.target.name == "endZone") {
-      await this.setState({ endZone: Number.parseInt(event.target.value)});
+      this.setState({ endZone: Number.parseInt(event.target.value) });
     }
 
     if (event.target.name == "trainType") {
-      await this.setState({ trainType: Number.parseInt(event.target.value)});
+      this.setState({ trainType: Number.parseInt(event.target.value) });
     }
 
     this.selectNumber();
@@ -175,29 +178,19 @@ export default class TrainNumber extends React.Component<{}, {startZone: Zones, 
         </Helmet>
         <form>
           <label>
-            Okręg startu:
+            Sceneria początkowa:
             <select name="startZone" value={this.state.startZone} onChange={this.handleChange}>
-              <option value={Zones.Warszawa}>Warszawa</option>
-              <option value={Zones.Lublin}>Lublin</option>
-              <option value={Zones.Kraków}>Kraków</option>
-              <option value={Zones.Sosnowiec}>Sosnowiec</option>
-              <option value={Zones.Gdańsk}>Gdańsk</option>
-              <option value={Zones.Wrocław}>Wrocław</option>
-              <option value={Zones.Poznań}>Poznań</option>
-              <option value={Zones.Szczecin}>Szczecin</option>
+              {this.sceneriesData.map((scenery, i) => (
+                <option key={i} value={i}>{scenery.name}</option>
+              ))}
             </select>
           </label> <br />
           <label>
-            Okręg końca:
+            Sceneria końcowa:
             <select name="endZone" value={this.state.endZone} onChange={this.handleChange}>
-              <option value={Zones.Warszawa}>Warszawa</option>
-              <option value={Zones.Lublin}>Lublin</option>
-              <option value={Zones.Kraków}>Kraków</option>
-              <option value={Zones.Sosnowiec}>Sosnowiec</option>
-              <option value={Zones.Gdańsk}>Gdańsk</option>
-              <option value={Zones.Wrocław}>Wrocław</option>
-              <option value={Zones.Poznań}>Poznań</option>
-              <option value={Zones.Szczecin}>Szczecin</option>
+              {this.sceneriesData.map((scenery, i) => (
+                <option key={i} value={i}>{scenery.name}</option>
+              ))}
             </select>
           </label> <br />
           <label>
@@ -222,5 +215,9 @@ export default class TrainNumber extends React.Component<{}, {startZone: Zones, 
         <button onClick={() => this.selectNumber()}>Generuj</button>
       </main>
     );
+  }
+
+  private getCOnstructionZoneFromIndex(index: number) {
+    return this.sceneriesData.find((d, i) => i == index)?.construtionZone;
   }
 }
