@@ -180,7 +180,9 @@ export default class TrainNumber extends React.Component<{}, {startZone: Zones, 
           <label>
             Sceneria początkowa:
             <select name="startZone" value={this.state.startZone} onChange={this.handleChange}>
-              {this.sceneriesData.map((scenery, i) => (
+              {this.sceneriesData.sort((a, b) => {
+                return a.name < b.name ?  -1 : 1;
+              }).map((scenery, i) => (
                 <option key={i} value={i}>{scenery.name}</option>
               ))}
             </select>
@@ -188,7 +190,9 @@ export default class TrainNumber extends React.Component<{}, {startZone: Zones, 
           <label>
             Sceneria końcowa:
             <select name="endZone" value={this.state.endZone} onChange={this.handleChange}>
-              {this.sceneriesData.map((scenery, i) => (
+              {this.sceneriesData.sort((a, b) => {
+                return a.name < b.name ?  -1 : 1;
+              }).map((scenery, i) => (
                 <option key={i} value={i}>{scenery.name}</option>
               ))}
             </select>
