@@ -25,7 +25,7 @@ enum TrainTypes {
   Luz
 }
 
-export default class TrainNumber extends React.Component<{}, {startZone: Zones, endZone: Zones, trainType: TrainTypes, trainNumber: string, errors: string[]}> {
+export default class TrainNumber extends React.Component<{}, {startZone: string, endZone: string, trainType: TrainTypes, trainNumber: string, errors: string[]}> {
 
   private activeNumbers: NumbersData[] = []
   private sceneriesData = Sceneries;
@@ -34,8 +34,8 @@ export default class TrainNumber extends React.Component<{}, {startZone: Zones, 
     super(props);
 
     this.state = {
-      startZone: 1,
-      endZone: 2,
+      startZone: "Aleksandrów Kujawski",
+      endZone: "Żerniki",
       trainType: TrainTypes.Express,
       trainNumber: "1350",
       errors: []
@@ -64,8 +64,8 @@ export default class TrainNumber extends React.Component<{}, {startZone: Zones, 
   selectNumber() {
     let number = "";
 
-    number += this.getCOnstructionZoneFromIndex(this.state.startZone);
-    number += this.getCOnstructionZoneFromIndex(this.state.endZone);
+    number += this.getCOnstructionZoneFromName(this.state.startZone);
+    number += this.getCOnstructionZoneFromName(this.state.endZone);
 
     switch (this.state.trainType) {
       case TrainTypes.Express:
@@ -152,15 +152,15 @@ export default class TrainNumber extends React.Component<{}, {startZone: Zones, 
 
   async handleChange(event: ChangeEvent<HTMLSelectElement>) {
     if (event.target.name == "startZone") {
-      this.setState({ startZone: Number.parseInt(event.target.value) });
+      await this.setState({ startZone: event.target.value });
     }
 
     if (event.target.name == "endZone") {
-      this.setState({ endZone: Number.parseInt(event.target.value) });
+      await this.setState({ endZone: event.target.value });
     }
 
     if (event.target.name == "trainType") {
-      this.setState({ trainType: Number.parseInt(event.target.value) });
+      await this.setState({ trainType: Number.parseInt(event.target.value) });
     }
 
     this.selectNumber();
@@ -180,20 +180,16 @@ export default class TrainNumber extends React.Component<{}, {startZone: Zones, 
           <label>
             Sceneria początkowa:
             <select name="startZone" value={this.state.startZone} onChange={this.handleChange}>
-              {this.sceneriesData.sort((a, b) => {
-                return a.name < b.name ?  -1 : 1;
-              }).map((scenery, i) => (
-                <option key={i} value={i}>{scenery.name}</option>
+              {this.sceneriesData.map((scenery, i) => (
+                <option key={i} value={scenery.name}>{scenery.name}</option>
               ))}
             </select>
           </label> <br />
           <label>
             Sceneria końcowa:
             <select name="endZone" value={this.state.endZone} onChange={this.handleChange}>
-              {this.sceneriesData.sort((a, b) => {
-                return a.name < b.name ?  -1 : 1;
-              }).map((scenery, i) => (
-                <option key={i} value={i}>{scenery.name}</option>
+              {this.sceneriesData.map((scenery, i) => (
+                <option key={i} value={scenery.name}>{scenery.name}</option>
               ))}
             </select>
           </label> <br />
@@ -221,7 +217,7 @@ export default class TrainNumber extends React.Component<{}, {startZone: Zones, 
     );
   }
 
-  private getCOnstructionZoneFromIndex(index: number) {
-    return this.sceneriesData.find((d, i) => i == index)?.construtionZone;
+  private getCOnstructionZoneFromName(name: string) {
+    return this.sceneriesData.find(d => d.name == name)?.construtionZone;
   }
 }
