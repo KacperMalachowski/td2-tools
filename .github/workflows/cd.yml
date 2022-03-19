@@ -75,9 +75,9 @@ jobs:
       - name: Load Docker Image
         run: docker load < ${{ github.event.repository.name }}.tar.gz
       - name: Run e2e tests
-        run:
-          docker network create --driver bridge test-net && \
-          docker run -d --name td2-tools --network test-net ${{ needs.build.outputs.image-tags }} yarn dev && \
+        run: |
+          docker network create --driver bridge test-net
+          docker run -d --name td2-tools --network test-net ${{ needs.build.outputs.image-tags }} yarn dev
           docker run -v $PWD:/e2e -w /e2e --network test-net --entrypoint cypress cypress/included:9.5.1 run --project . --config baseUrl=http://td2-tools:3000
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
