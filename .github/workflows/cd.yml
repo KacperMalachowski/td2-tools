@@ -36,9 +36,9 @@ jobs:
           cache-name: cache-docker-image
         with:
           path: ${{ github.event.repository.name }}.tar.gz
-          key: ${{ steps.meta.outputs.tags }}
+          key: ${{ github.event.repository.name }}
           restore-keys: |
-            ${{ steps.meta.outputs.tags }}
+            ${{ github.event.repository.name }}
       
 
   test-unit:
@@ -51,9 +51,9 @@ jobs:
           cache-name: cache-docker-image
         with:
           path: ${{ env.IMAGE_NAME }}.tar.gz
-          key: ${{ needs.build.outputs.image-tags }}
+          key: ${{ github.event.repository.name }}
           restore-keys: |
-            ${{ needs.build.outputs.image-tags }}
+            ${{ github.event.repository.name }}
       - name: Load Docker Image
         run: docker load < ${{ github.event.repository.name }}.tar.gz
       - name: Run unit tests
@@ -69,11 +69,11 @@ jobs:
           cache-name: cache-docker-image
         with:
           path: ${{ github.event.repository.name }}.tar.gz
-          key: ${{ needs.build.outputs.image-tags }}
+          key: ${{ github.event.repository.name }}
           restore-keys: |
-            ${{ needs.build.outputs.image-tags }}
+            ${{ github.event.repository.name }}
       - name: Load Docker Image
-        run: docker load < ${{ env.IMAGE_NAME }}.tar.gz
+        run: docker load < ${{ github.event.repository.name }}.tar.gz
       - name: Run e2e tests
         run:
           docker network create --driver bridge test-net && \
@@ -97,10 +97,10 @@ jobs:
         env:
           cache-name: cache-docker-image
         with:
-          path: ${{ env.IMAGE_NAME }}.tar.gz
-          key: ${{ needs.build.outputs.image-tags }}
+          path: ${{ github.event.repository.name }}.tar.gz
+          key: ${{ github.event.repository.name }}
           restore-keys: |
-            ${{ needs.build.outputs.image-tags }}
+            ${{ github.event.repository.name }}
       - name: Load Docker Image
         run: docker load < ${{ github.event.repository.name }}.tar.gz
       - name: Log in to Docker Hub
