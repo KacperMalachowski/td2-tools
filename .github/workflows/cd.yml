@@ -31,14 +31,15 @@ jobs:
       - name: Save Docker Image
         run: docker save ${{ steps.meta.outputs.tags }} > ${{ github.event.repository.name }}.tar.gz
       - name: Cache Docker Image
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         env:
           cache-name: cache-docker-image
         with:
           path: ${{ github.event.repository.name }}.tar.gz
-          key: ${{ github.event.repository.name }}
+          key: ${{ github.event.repository.name }}-${{ hashFiles('${{ github.event.repository.name }}.tar.gz') }}
           restore-keys: |
-            ${{ github.event.repository.name }}
+            ${{ github.event.repository.name }}-${{ hashFiles('${{ github.event.repository.name }}.tar.gz') }}
+            ${{ github.event.repository.name }}-
       
 
   test-unit:
@@ -46,14 +47,15 @@ jobs:
     needs: build
     steps:
       - name: Cache Docker Image
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         env:
           cache-name: cache-docker-image
         with:
-          path: ${{ env.IMAGE_NAME }}.tar.gz
-          key: ${{ github.event.repository.name }}
+          path: ${{ github.event.repository.name }}.tar.gz
+          key: ${{ github.event.repository.name }}-${{ hashFiles('${{ github.event.repository.name }}.tar.gz') }}
           restore-keys: |
-            ${{ github.event.repository.name }}
+            ${{ github.event.repository.name }}-${{ hashFiles('${{ github.event.repository.name }}.tar.gz') }}
+            ${{ github.event.repository.name }}-
       - name: Load Docker Image
         run: docker load < ${{ github.event.repository.name }}.tar.gz
       - name: Run unit tests
@@ -64,14 +66,15 @@ jobs:
     needs: build
     steps:
       - name: Cache Docker Image
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         env:
           cache-name: cache-docker-image
         with:
           path: ${{ github.event.repository.name }}.tar.gz
-          key: ${{ github.event.repository.name }}
+          key: ${{ github.event.repository.name }}-${{ hashFiles('${{ github.event.repository.name }}.tar.gz') }}
           restore-keys: |
-            ${{ github.event.repository.name }}
+            ${{ github.event.repository.name }}-${{ hashFiles('${{ github.event.repository.name }}.tar.gz') }}
+            ${{ github.event.repository.name }}-
       - name: Load Docker Image
         run: docker load < ${{ github.event.repository.name }}.tar.gz
       - name: Run e2e tests
@@ -93,14 +96,15 @@ jobs:
     needs: [build,test-unit,test-e2e]
     steps:
       - name: Cache Docker Image
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         env:
           cache-name: cache-docker-image
         with:
           path: ${{ github.event.repository.name }}.tar.gz
-          key: ${{ github.event.repository.name }}
+          key: ${{ github.event.repository.name }}-${{ hashFiles('${{ github.event.repository.name }}.tar.gz') }}
           restore-keys: |
-            ${{ github.event.repository.name }}
+            ${{ github.event.repository.name }}-${{ hashFiles('${{ github.event.repository.name }}.tar.gz') }}
+            ${{ github.event.repository.name }}-
       - name: Load Docker Image
         run: docker load < ${{ github.event.repository.name }}.tar.gz
       - name: Log in to Docker Hub
