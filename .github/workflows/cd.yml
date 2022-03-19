@@ -31,7 +31,7 @@ jobs:
       - name: Save Docker Image
         run: docker save ${{ steps.meta.outputs.tags }} > ${{ github.event.repository.name }}.tar.gz
       - name: Cache Docker Image
-        uses: actions/cache@v2
+        uses: actions/cache@v1
         env:
           cache-name: cache-docker-image
         with:
@@ -46,7 +46,7 @@ jobs:
     needs: build
     steps:
       - name: Cache Docker Image
-        uses: actions/cache@v2
+        uses: actions/cache@v1
         env:
           cache-name: cache-docker-image
         with:
@@ -64,7 +64,7 @@ jobs:
     needs: build
     steps:
       - name: Cache Docker Image
-        uses: actions/cache@v2
+        uses: actions/cache@v1
         env:
           cache-name: cache-docker-image
         with:
@@ -93,7 +93,7 @@ jobs:
     needs: [build,test-unit,test-e2e]
     steps:
       - name: Cache Docker Image
-        uses: actions/cache@v2
+        uses: actions/cache@v1
         env:
           cache-name: cache-docker-image
         with:
