@@ -29,13 +29,13 @@ jobs:
       - name: Build Docker Image
         run: docker build -t ${{ steps.meta.outputs.tags }} --target builder .
       - name: Save Docker Image
-        run: docker save ${{ steps.meta.outputs.tags }} > ${{ env.IMAGE_NAME }}.tar.gz
+        run: docker save ${{ steps.meta.outputs.tags }} > ${{ github.event.repository.name }}.tar.gz
       - name: Cache Docker Image
         uses: actions/cache@v2
         env:
           cache-name: cache-docker-image
         with:
-          path: ${{ env.IMAGE_NAME }}.tar.gz
+          path: ${{ github.event.repository.name }}.tar.gz
           key: ${{ steps.meta.outputs.tags }}
           restore-keys: |
             ${{ steps.meta.outputs.tags }}
@@ -55,7 +55,7 @@ jobs:
           restore-keys: |
             ${{ needs.build.outputs.image-tags }}
       - name: Load Docker Image
-        run: docker load < ${{ env.IMAGE_NAME }}.tar.gz
+        run: docker load < ${{ github.event.repository.name }}.tar.gz
       - name: Run unit tests
         run: docker run --rm ${{ needs.build.outputs.image-tags }} yarn test
 
@@ -68,7 +68,7 @@ jobs:
         env:
           cache-name: cache-docker-image
         with:
-          path: ${{ env.IMAGE_NAME }}.tar.gz
+          path: ${{ github.event.repository.name }}.tar.gz
           key: ${{ needs.build.outputs.image-tags }}
           restore-keys: |
             ${{ needs.build.outputs.image-tags }}
@@ -102,7 +102,7 @@ jobs:
           restore-keys: |
             ${{ needs.build.outputs.image-tags }}
       - name: Load Docker Image
-        run: docker load < ${{ env.IMAGE_NAME }}.tar.gz
+        run: docker load < ${{ github.event.repository.name }}.tar.gz
       - name: Log in to Docker Hub
         uses: docker/login-action@v1
         with:
