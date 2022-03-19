@@ -5,21 +5,16 @@ on: [push]
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  GRAPHCMS_ENDPOINT: ${{ secrets.GRAPHCMS_ENDPOINT }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      image-tags: ${{ steps.meta.outputs.tags }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
       - run: yarn install
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
       - name: set release date
         run: |
           echo "RELEASE_DATE=$(date +"%Y%m%d")" >> ${GITHUB_ENV}    
@@ -33,15 +28,56 @@ jobs:
             type=raw,value=${{github.ref_name}}.${{env.RELEASE_DATE}}.${{github.run_id}}
       - name: Build Docker Image
         run: docker build -t ${{ steps.meta.outputs.tags }} --target builder .
+      - name: Save Docker Image
+        run: docker save ${{ steps.meta.outputs.tags }} > ${{ env.IMAGE_NAME }}.tar.gz
+      - name: Cache Docker Image
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-docker-image
+        with:
+          path: ${{ env.IMAGE_NAME }}.tar.gz
+          key: ${{ steps.meta.outputs.tags }}
+          restore-keys: |
+            ${{ steps.meta.outputs.tags }}
+      
+
+  test-unit:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Cache Docker Image
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-docker-image
+        with:
+          path: ${{ env.IMAGE_NAME }}.tar.gz
+          key: ${{ needs.build.outputs.image-tags }}
+          restore-keys: |
+            ${{ needs.build.outputs.image-tags }}
+      - name: Load Docker Image
+        run: docker load < ${{ env.IMAGE_NAME }}.tar.gz
       - name: Run unit tests
-        run: |
-          docker run --rm ${{ steps.meta.outputs.tags }} yarn test
-      - name: Build prod Docker Image
-        run: docker build -t ${{ steps.meta.outputs.tags }} --cache-from ${{  steps.meta.outputs.tags }} .
+        run: docker run --rm ${{ needs.build.outputs.image-tags }} yarn test
+
+  test-e2e:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Cache Docker Image
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-docker-image
+        with:
+          path: ${{ env.IMAGE_NAME }}.tar.gz
+          key: ${{ needs.build.outputs.image-tags }}
+          restore-keys: |
+            ${{ needs.build.outputs.image-tags }}
+      - name: Load Docker Image
+        run: docker load < ${{ env.IMAGE_NAME }}.tar.gz
       - name: Run e2e tests
-        run: |
-          docker network create --driver bridge test-net
-          docker run -d --name td2-tools --network test-net ${{ steps.meta.outputs.tags }} yarn dev
+        run:
+          docker network create --driver bridge test-net && \
+          docker run -d --name td2-tools --network test-net ${{ needs.build.outputs.image-tags }} yarn dev && \
           docker run -v $PWD:/e2e -w /e2e --network test-net --entrypoint cypress cypress/included:9.5.1 run --project . --config baseUrl=http://td2-tools:3000
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
@@ -49,8 +85,41 @@ jobs:
           name: cypress-result
           path: ${{github.workspace}}/cypress/(screenshots|videos)/**/*
           retention-days: 5
+
+
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build,test-unit,test-e2e]
+    steps:
+      - name: Cache Docker Image
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-docker-image
+        with:
+          path: ${{ env.IMAGE_NAME }}.tar.gz
+          key: ${{ needs.build.outputs.image-tags }}
+          restore-keys: |
+            ${{ needs.build.outputs.image-tags }}
+      - name: Load Docker Image
+        run: docker load < ${{ env.IMAGE_NAME }}.tar.gz
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build prod Docker Image
+        run: docker build -t ${{ needs.build.outputs.image-tags }} --cache-from ${{  needs.build.outputs.image-tags }} .
       - name: Push prod Docker Image
-        run: docker push --all-tags ${{ steps.meta.outputs.tags }}
-      - name: curl
-        if: github.ref == 'refs/heads/main'
-        run: curl -X POST -F "token=${{ secrets.DEPLOY_TOKEN }}" -F "restart_containers=true" -F "image=${{ steps.meta.outputs.tags }}" https://deployer.kacpermalachowski.pl/images/pull
+        run: docker push --all-tags ${{ needs.build.outputs.image-tags }}
+
+
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [build,deploy]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Call deployer and release latest image
+        run: curl -X POST -F "token=${{ secrets.DEPLOY_TOKEN }}" -F "restart_containers=true" -F "image=${{ needs.build.outputs.image-tags }}" https://deployer.kacpermalachowski.pl/images/pull
