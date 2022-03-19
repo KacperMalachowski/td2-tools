@@ -1,0 +1,56 @@
+
+name: Continous Deployment Workflow
+on: [push]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  GRAPHCMS_ENDPOINT: ${{ secrets.GRAPHCMS_ENDPOINT }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+      - run: yarn install
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: set release date
+        run: |
+          echo "RELEASE_DATE=$(date +"%Y%m%d")" >> ${GITHUB_ENV}    
+      - name: Extract Metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          tags: |
+            type=raw,value=${{github.ref_name}}.${{env.RELEASE_DATE}}.${{github.run_id}}
+      - name: Build Docker Image
+        run: docker build -t ${{ steps.meta.outputs.tags }} --target builder .
+      - name: Run unit tests
+        run: |
+          docker run --rm ${{ steps.meta.outputs.tags }} yarn test
+      - name: Build prod Docker Image
+        run: docker build -t ${{ steps.meta.outputs.tags }} --cache-from ${{  steps.meta.outputs.tags }} .
+      - name: Run e2e tests
+        run: |
+          docker network create --driver bridge test-net
+          docker run -d --name td2-tools --network test-net ${{ steps.meta.outputs.tags }} yarn dev
+          docker run -v $PWD:/e2e -w /e2e --network test-net --entrypoint cypress cypress/included:9.5.1 run --project . --config baseUrl=http://td2-tools:3000
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: cypress-result
+          path: ${{github.workspace}}/cypress/(screenshots|videos)/**/*
+          retention-days: 5
+      - name: Push prod Docker Image
+        run: docker push --all-tags ${{ steps.meta.outputs.tags }}
+      - name: curl
+        if: github.ref == 'refs/heads/main'
+        run: curl -X POST -F "token=${{ secrets.DEPLOY_TOKEN }}" -F "restart_containers=true" -F "image=${{ steps.meta.outputs.tags }}" https://deployer.kacpermalachowski.pl/images/pull
