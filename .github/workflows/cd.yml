@@ -119,5 +119,10 @@ jobs:
     needs: [build,deliver]
     if: github.ref == 'refs/heads/main'
     steps:
-      - name: Call deployer and release latest image
-        run: curl -X POST -F "token=${{ secrets.DEPLOY_TOKEN }}" -F "restart_containers=true" -F "image=ghcr.io/kacpermalachowski/${{ github.event.repository.name }}" https://deployer.kacpermalachowski.pl/images/pull
+      - name: Deploy to DOCKER SWAARM
+        uses: wshihadeh/docker-deployment-action@v1
+        with:
+          remote_docker_host: deployer@${{ secrets.DOCKER_HOST }}
+          ssh_private_key: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
+          ssh_public_key: ${{ secrtes.DEPLOYER_PUBLIC_KEY }}
+          args: ${{ github.event.repository.name }}
