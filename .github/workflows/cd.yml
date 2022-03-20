@@ -72,7 +72,9 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: cypress-result
-          path: ${{github.workspace}}/cypress/(screenshots|videos)/**/*
+          path: |
+            ${{github.workspace}}/cypress/videos/
+            ${{github.workspace}}/cypress/screenshots/
           retention-days: 5
 
 
