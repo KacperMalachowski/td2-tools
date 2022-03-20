@@ -3,6 +3,7 @@ name: Continous Deployment Workflow
 on: [push]
 
 env:
+  REGISTRY: ghcr.io
   IMAGE_NAME: ghcr.io/kacpermalachowski/${{ github.event.repository.name  }}:${{ github.sha }}
   IMAGE_TAG: ${{ github.sha }}
 
