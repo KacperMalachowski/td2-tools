@@ -124,5 +124,5 @@ jobs:
         with:
           remote_docker_host: deployer@${{ secrets.DOCKER_HOST }}
           ssh_private_key: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
-          ssh_public_key: ${{ secrtes.DEPLOYER_PUBLIC_KEY }}
+          ssh_public_key: ${{ secrets.DEPLOYER_PUBLIC_KEY }}
           args: ${{ github.event.repository.name }}
