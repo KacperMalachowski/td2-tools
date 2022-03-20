@@ -125,4 +125,5 @@ jobs:
           remote_docker_host: deployer@${{ secrets.DOCKER_HOST }}
           ssh_private_key: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
           ssh_public_key: ${{ secrets.DEPLOYER_PUBLIC_KEY }}
+          deployment_mode: docker-swarm
           args: ${{ github.event.repository.name }}
