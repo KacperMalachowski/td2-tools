@@ -82,6 +82,7 @@ jobs:
   deliver:
     runs-on: ubuntu-latest
     needs: [build,test-unit,test-e2e]
+    if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v2
       - name: Cache Docker Image
@@ -119,4 +120,4 @@ jobs:
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Call deployer and release latest image
-        run: curl -X POST -F "token=${{ secrets.DEPLOY_TOKEN }}" -F "restart_containers=true" -F "image=${{ env.IMAGE_NAME }}" https://deployer.kacpermalachowski.pl/images/pull
+        run: curl -X POST -F "token=${{ secrets.DEPLOY_TOKEN }}" -F "restart_containers=true" -F "image=ghcr.io/kacpermalachowski/${{ github.event.repository.name }}" https://deployer.kacpermalachowski.pl/images/pull
