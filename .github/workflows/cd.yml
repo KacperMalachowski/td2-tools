@@ -119,6 +119,7 @@ jobs:
     needs: [build,deliver]
     if: github.ref == 'refs/heads/main'
     steps:
+      - uses: actions/checkout@v2
       - name: Deploy to DOCKER SWAARM
         uses: wshihadeh/docker-deployment-action@v1
         with:
