@@ -24,9 +24,6 @@ jobs:
         with:
           path: ${{ github.event.repository.name }}.tar.gz
           key: ${{ github.event.repository.name }}-${{ env.IMAGE_TAG }}
-          restore-keys: |
-            ${{ github.event.repository.name }}-${{ env.IMAGE_TAG }}
-            ${{ github.event.repository.name }}-
       
 
   test-unit:
