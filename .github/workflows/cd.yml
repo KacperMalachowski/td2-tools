@@ -3,42 +3,29 @@ name: Continous Deployment Workflow
 on: [push]
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: ghcr.io/${{ github.repository }}:${{ github.sha }}
+  IMAGE_TAG: ${{ github.sha }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      image-tags: ${{ steps.meta.outputs.tags }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
-      - run: yarn install
-      - name: set release date
-        run: |
-          echo "RELEASE_DATE=$(date +"%Y%m%d")" >> ${GITHUB_ENV}    
-      - name: Extract Metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v3
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          tags: |
-            type=raw,value=${{github.ref_name}}.${{env.RELEASE_DATE}}.${{github.run_id}}
+      - run: yarn install  
       - name: Build Docker Image
-        run: docker build -t ${{ steps.meta.outputs.tags }} --target builder .
+        run: docker build -t ${{ env.IMAGE_NAME }} --target builder .
       - name: Save Docker Image
-        run: docker save ${{ steps.meta.outputs.tags }} > ${{ github.event.repository.name }}.tar.gz
+        run: docker save ${{ env.IMAGE_NAME }} > ${{ github.event.repository.name }}.tar.gz
       - name: Cache Docker Image
         uses: actions/cache@v2
         env:
           cache-name: cache-docker-image
         with:
           path: ${{ github.event.repository.name }}.tar.gz
-          key: ${{ github.event.repository.name }}-${{ hashFiles('${{ github.event.repository.name }}.tar.gz') }}
+          key: ${{ github.event.repository.name }}-${{ env.IMAGE_TAG }}
           restore-keys: |
-            ${{ github.event.repository.name }}-${{ hashFiles('${{ github.event.repository.name }}.tar.gz') }}
+            ${{ github.event.repository.name }}-${{ env.IMAGE_TAG }}
             ${{ github.event.repository.name }}-
       
 
@@ -52,14 +39,14 @@ jobs:
           cache-name: cache-docker-image
         with:
           path: ${{ github.event.repository.name }}.tar.gz
-          key: ${{ github.event.repository.name }}-${{ hashFiles('${{ github.event.repository.name }}.tar.gz') }}
+          key: ${{ github.event.repository.name }}-${{ env.IMAGE_TAG }}
           restore-keys: |
-            ${{ github.event.repository.name }}-${{ hashFiles('${{ github.event.repository.name }}.tar.gz') }}
+            ${{ github.event.repository.name }}-${{ env.IMAGE_TAG }}
             ${{ github.event.repository.name }}-
       - name: Load Docker Image
         run: docker load < ${{ github.event.repository.name }}.tar.gz
       - name: Run unit tests
-        run: docker run --rm ${{ needs.build.outputs.image-tags }} yarn test
+        run: docker run --rm ${{ env.IMAGE_NAME }} yarn test
 
   test-e2e:
     runs-on: ubuntu-latest
@@ -72,16 +59,16 @@ jobs:
           cache-name: cache-docker-image
         with:
           path: ${{ github.event.repository.name }}.tar.gz
-          key: ${{ github.event.repository.name }}-${{ hashFiles('${{ github.event.repository.name }}.tar.gz') }}
+          key: ${{ github.event.repository.name }}-${{ env.IMAGE_TAG }}
           restore-keys: |
-            ${{ github.event.repository.name }}-${{ hashFiles('${{ github.event.repository.name }}.tar.gz') }}
+            ${{ github.event.repository.name }}-${{ env.IMAGE_TAG }}
             ${{ github.event.repository.name }}-
       - name: Load Docker Image
         run: docker load < ${{ github.event.repository.name }}.tar.gz
       - name: Run e2e tests
         run: |
           docker network create --driver bridge test-net
-          docker run -d --name td2-tools --network test-net ${{ needs.build.outputs.image-tags }} yarn dev
+          docker run -d --name td2-tools --network test-net ${{ env.IMAGE_NAME }} yarn dev
           docker run -v $PWD:/e2e -w /e2e --network test-net --entrypoint cypress cypress/included:9.5.1 run --project . --config baseUrl=http://td2-tools:3000
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
@@ -102,9 +89,9 @@ jobs:
           cache-name: cache-docker-image
         with:
           path: ${{ github.event.repository.name }}.tar.gz
-          key: ${{ github.event.repository.name }}-${{ hashFiles('${{ github.event.repository.name }}.tar.gz') }}
+          key: ${{ github.event.repository.name }}-${{ env.IMAGE_TAG }}
           restore-keys: |
-            ${{ github.event.repository.name }}-${{ hashFiles('${{ github.event.repository.name }}.tar.gz') }}
+            ${{ github.event.repository.name }}-${{ env.IMAGE_TAG }}
             ${{ github.event.repository.name }}-
       - name: Load Docker Image
         run: docker load < ${{ github.event.repository.name }}.tar.gz
@@ -115,9 +102,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build prod Docker Image
-        run: docker build -t ${{ needs.build.outputs.image-tags }} --cache-from ${{  needs.build.outputs.image-tags }} .
+        run: docker build -t ${{ env.IMAGE_NAME }} --cache-from ${{ env.IMAGE_NAME }} .
       - name: Push prod Docker Image
-        run: docker push --all-tags ${{ needs.build.outputs.image-tags }}
+        run: docker push --all-tags ${{ env.IMAGE_NAME }}
 
 
 
@@ -127,4 +114,4 @@ jobs:
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Call deployer and release latest image
-        run: curl -X POST -F "token=${{ secrets.DEPLOY_TOKEN }}" -F "restart_containers=true" -F "image=${{ needs.build.outputs.image-tags }}" https://deployer.kacpermalachowski.pl/images/pull
+        run: curl -X POST -F "token=${{ secrets.DEPLOY_TOKEN }}" -F "restart_containers=true" -F "image=${{ env.IMAGE_NAME }}" https://deployer.kacpermalachowski.pl/images/pull
