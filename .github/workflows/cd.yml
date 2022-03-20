@@ -4,7 +4,7 @@ on: [push]
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ghcr.io/kacpermalachowski/${{ github.event.repository.name  }}:${{ github.sha }}
+  IMAGE_NAME: ghcr.io/kacpermalachowski/${{ github.event.repository.name }}:${{ github.sha }}
   IMAGE_TAG: ${{ github.sha }}
 
 jobs:
@@ -79,7 +79,7 @@ jobs:
 
 
 
-  deploy:
+  deliver:
     runs-on: ubuntu-latest
     needs: [build,test-unit,test-e2e]
     steps:
@@ -105,13 +105,17 @@ jobs:
       - name: Build prod Docker Image
         run: docker build -t ${{ env.IMAGE_NAME }} --cache-from ${{ env.IMAGE_NAME }} .
       - name: Push prod Docker Image
-        run: docker push --all-tags ${{ env.IMAGE_NAME }}
+        run: docker push ${{ env.IMAGE_NAME }}
+      - name: Tag as latest
+        run: docker tag ${{ env.IMAGE_NAME }} ghcr.io/kacpermalachowski/${{ github.event.repository.name }}:latest
+      - name: Push latest
+        run: docker push ghcr.io/kacpermalachowski/${{ github.event.repository.name }}:latest
 
 
 
-  release:
+  deploy:
     runs-on: ubuntu-latest
-    needs: [build,deploy]
+    needs: [build,deliver]
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Call deployer and release latest image
