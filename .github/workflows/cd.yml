@@ -119,11 +119,11 @@ jobs:
     needs: [build,deliver]
     if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v2
-      - name: docker-swarm-deploy
-        uses: sagebind/docker-swarm-deploy-action@v2
+      - name: Deploy to Docker swarm
+        uses: wshihadeh/docker-deployment-action@v1
         with:
-          remote_host: ssh://deployer@${{ secrets.DOCKER_HOST }}
+          remote_docker_host: ${{ secrets.DOCKER_HOST }}
           ssh_private_key: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
           ssh_public_key: ${{ secrets.DEPLOYER_PUBLIC_KEY }}
-          args: stack deploy --compose-file docker-compose.yaml ${{ github.event.repository.name }}
+          deployment_mode: docker-swarm
+          args: ${{ github.event.repository.name }}
