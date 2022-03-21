@@ -120,10 +120,16 @@ jobs:
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v2
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Deploy to Docker swarm
         uses: sagebind/docker-swarm-deploy-action@v2
         with:
           remote_host: ${{ secrets.DOCKER_HOST }}
           ssh_private_key: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
           ssh_public_key: ${{ secrets.DEPLOYER_PUBLIC_KEY }}
-          args: stack deploy --compose-file docker-compose.yaml ${{ github.event.repository.name }}
+          args: stack deploy --with-registry-auth --compose-file docker-compose.yaml ${{ github.event.repository.name }}
