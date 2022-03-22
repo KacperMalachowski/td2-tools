@@ -4,7 +4,7 @@ on: [push]
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ghcr.io/kacpermalachowski/${{ github.event.repository.name }}:${{ github.sha }}
+  IMAGE_NAME: ghcr.io/malachowskiinc/${{ github.event.repository.name }}:${{ github.sha }}
   IMAGE_TAG: ${{ github.sha }}
 
 jobs:
@@ -106,9 +106,9 @@ jobs:
       - name: Push prod Docker Image
         run: docker push ${{ env.IMAGE_NAME }}
       - name: Tag as latest
-        run: docker tag ${{ env.IMAGE_NAME }} ghcr.io/kacpermalachowski/${{ github.event.repository.name }}:latest
+        run: docker tag ${{ env.IMAGE_NAME }} ghcr.io/malachowskiinc/${{ github.event.repository.name }}:latest
       - name: Push latest
-        run: docker push ghcr.io/kacpermalachowski/${{ github.event.repository.name }}:latest
+        run: docker push ghcr.io/malachowskiinc/${{ github.event.repository.name }}:latest
 
 
 
