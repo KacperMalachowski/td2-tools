@@ -32,9 +32,11 @@ services:
         - traefik.docker.network=traefik-public
         - traefik.constraint-label=traefik-public
         - traefik.http.routers.td2-tool-http.rule=Host(`td2.kacpermalachowski.pl`)
+        - traefik.http.routers.td2-tool-http.rule=Host(`kacpermalachowski.pl`)
         - traefik.http.routers.td2-tools-http.entrypoints=http
         - traefik.http.routers.td2-tools-http.middlewares=https-redirect
         - traefik.http.routers.td2-tools-https.rule=Host(`td2.kacpermalachowski.pl`)
+        - traefik.http.routers.td2-tools-https.rule=Host(`kacpermalachowski.pl`)
         - traefik.http.routers.td2-tools-https.entrypoints=https
         - traefik.http.routers.td2-tools-https.tls=true
         - traefik.http.routers.td2-tools-https.tls.certresolver=le

@@ -2,10 +2,12 @@ import type { NextPage } from 'next'
 import Head from 'next/head'
 import Image from 'next/image'
 import Link from 'next/link'
+import MainLayout from '../layouts/Main'
 import styles from '../styles/Home.module.css'
 
 const Home: NextPage = () => {
   return (
+    <MainLayout>
     <div className={styles.container}>
       <Head>
         <title>Create Next App</title>
@@ -31,17 +33,8 @@ const Home: NextPage = () => {
           </Link>
         </div>
       </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          &copy; Kacper Małachowski (Kacper9)
-        </a>
-      </footer>
     </div>
+    </MainLayout>
   )
 }
 
