@@ -138,4 +138,5 @@ jobs:
           key: ${{ secrets.DEPLOYER_SSH_PRIV_KEY }}
           script: |
             echo ${{ secrets.GITHUB_TOKEN }} | docker login --username ${{ github.actor }} --password-stdin ghcr.io
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login --username ${{ github.actor }} --password-stdin https://ghcr.io
             IMAGE_NAME="${{ env.IMAGE_NAME }}" docker stack deploy --prune --with-registry-auth --resolve-image=always --compose-file tmp/docker-compose.yaml td2-tools
