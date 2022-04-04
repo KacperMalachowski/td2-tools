@@ -12,8 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-      - run: yarn install  
       - name: Build Docker Image
         run: docker build -t ${{ env.IMAGE_NAME }} --target builder .
       - name: Save Docker Image
@@ -48,6 +46,7 @@ jobs:
 
   test-e2e:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     needs: build
     steps:
       - uses: actions/checkout@v2
@@ -68,14 +67,16 @@ jobs:
           docker network create --driver bridge test-net
           docker run -d --name td2-tools --network test-net ${{ env.IMAGE_NAME }} yarn dev
           docker run -v $PWD:/e2e -w /e2e --network test-net --entrypoint cypress cypress/included:9.5.1 run --project . --config baseUrl=http://td2-tools:3000
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v2
+        if: failure()
         with:
-          name: cypress-result
-          path: |
-            ${{github.workspace}}/cypress/videos/
-            ${{github.workspace}}/cypress/screenshots/
-          retention-days: 5
+          name: cypress-screenshots
+          path: cypress/screenshots
+      - uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: cypress-videos
+          path: cypress/videos
 
   deliver:
     runs-on: ubuntu-latest

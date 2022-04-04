@@ -1,3 +1,5 @@
+import getRandomNumber from "../../utils/getRandomNumber";
+
 export enum TrainTypes {
   "Ekspres",
   "Pośpieszny",
@@ -67,11 +69,5 @@ const generateZonesID = (startZone: number, endZone: number): number => {
 const getRandomElement = <T>(item: Array<T>) => {
   return item[Math.floor(Math.random() * item.length)];
 }
-
-const getRandomNumber = (min: number, max: number): number => {
-  return Math.random() * (max - min) + min;
-}
-
-
 
 export default generateTrainNo;
