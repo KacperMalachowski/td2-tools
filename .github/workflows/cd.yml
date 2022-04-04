@@ -66,6 +66,7 @@ jobs:
         with:
           start: docker run -d --name td2-tools --network host ${{ env.IMAGE_NAME }} yarn dev
           wait-on: http://localhost:3000
+          config: baseUrl=http://localhost:3000
       - uses: actions/upload-artifact@v2
         if: failure()
         with:
