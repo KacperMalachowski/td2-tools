@@ -13,7 +13,7 @@ services:
       - 3001:3000
     deploy:
       mode: replicated
-      replicas: 2
+      replicas: 1
       rollback_config:
         parallelism: 1
         delay: 10s
@@ -38,11 +38,4 @@ services:
         - traefik.http.routers.td2-tools-https.entrypoints=https
         - traefik.http.routers.td2-tools-https.tls=true
         - traefik.http.routers.td2-tools-https.tls.certresolver=le
-        - traefik.http.routers.td2-tool-tmp-http.rule=Host(`kacpermalachowski.pl`)
-        - traefik.http.routers.td2-tool-tmp-http.entrypoints=http
-        - traefik.http.routers.td2-tool-tmp-http.middlewares=https-redirect
-        - traefik.http.routers.td2-tool-tmp-https.rule=Host(`kacpermalachowski.pl`)
-        - traefik.http.routers.td2-tool-tmp-https.entrypoints=https
-        - traefik.http.routers.td2-tools-tmp-https.tls=true
-        - traefik.http.routers.td2-tools-tmp-https.tls.certresolver=le
         - traefik.http.services.td2-tools.loadbalancer.server.port=3000
